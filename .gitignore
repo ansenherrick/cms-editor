@@ -1,0 +1,45 @@
+# Credentials and machine-local configuration
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.mobileprovision
+local.properties
+
+# Gradle, Kotlin and generated build output
+.gradle/
+.kotlin/
+build/
+out/
+.build/
+
+# Xcode user state; keep project.pbxproj and shared project settings
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+
+# Local IDE and operating system files
+.idea/
+.vscode/
+.DS_Store
+._*
+__MACOSX/
+Thumbs.db
+Desktop.ini
+
+# Runtime data, local logs and repair backups
+serverData/
+*.log
+/repair-backups/
+*.bundle
+*.bak
+
+# Empty artifacts from the original copied project
+/A
+/Compilation

@@ -1,0 +1,36 @@
+name: cms-editor
+
+services:
+  cms-api:
+    build:
+      context: ../..
+      dockerfile: deploy/windows/Dockerfile
+    restart: unless-stopped
+    environment:
+      CMS_ENVIRONMENT: production
+      CMS_BIND_HOST: 0.0.0.0
+      CMS_BEHIND_TUNNEL: "true"
+      CMS_PORT: "8080"
+      JAVA_TOOL_OPTIONS: -Dcms.storage.path=/app/data/cms-posts.json
+      CMS_IMAGE_STORAGE: r2
+      CMS_ACCESS_TOKENS: ${CMS_ACCESS_TOKENS:?Set this as a Windows user environment variable before starting.}
+      CMS_R2_ENDPOINT: ${CMS_R2_ENDPOINT:?Set this as a Windows user environment variable before starting.}
+      CMS_R2_ACCESS_KEY_ID: ${CMS_R2_ACCESS_KEY_ID:?Set this as a Windows user environment variable before starting.}
+      CMS_R2_SECRET_ACCESS_KEY: ${CMS_R2_SECRET_ACCESS_KEY:?Set this as a Windows user environment variable before starting.}
+      CMS_R2_BUCKET: cms-editor-images
+      CMS_R2_PUBLIC_BASE_URL: https://assets.ansenherrick.com
+    expose:
+      - "8080"
+    volumes:
+      - cms-editor-data:/app/data
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    depends_on:
+      - cms-api
+    command: tunnel --no-autoupdate run --token ${CF_TUNNEL_TOKEN:?Set this as a Windows user environment variable before starting.}
+
+volumes:
+  cms-editor-data:
+    name: cms-editor-data

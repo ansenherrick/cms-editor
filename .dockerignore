@@ -1,0 +1,20 @@
+# The image only needs Gradle configuration and Kotlin sources.
+**
+!settings.gradle.kts
+!build.gradle.kts
+!gradle.properties
+!shared/
+!shared/build.gradle.kts
+!shared/src/
+!shared/src/**
+!server/
+!server/build.gradle.kts
+!server/src/
+!server/src/**
+# Never send environment files or copied build output to the builder.
+**/.env
+**/.env.*
+**/.gradle
+**/.kotlin
+**/build
+**/serverData

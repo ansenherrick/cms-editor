@@ -1,0 +1,17 @@
+# Normalize text in Git and use LF on both operating systems by default.
+* text=auto eol=lf
+
+# Windows command scripts use CRLF in the working copy.
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets must not undergo line-ending conversion.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.jar binary
