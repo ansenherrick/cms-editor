@@ -68,7 +68,8 @@ struct BlogPostAPI {
         }
         guard (200..<300).contains(httpResponse.statusCode) else {
             let error = try? JSONDecoder().decode(APIProblems.self, from: data)
-            throw APIError.message(error?.problems.joined(separator: "\n") ?? "Request failed (\(httpResponse.statusCode)).")
+            let detail = error?.problems.joined(separator: "\n") ?? "Request failed."
+            throw APIError.message("\(detail) (\(httpResponse.statusCode))")
         }
 
         if Response.self == EmptyResponse.self { return EmptyResponse() as! Response }

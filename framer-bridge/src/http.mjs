@@ -63,7 +63,7 @@ function mapError(error) {
 }
 
 function logBridgeError(error, status) {
-  if (error instanceof CmsError) return
+  if (error instanceof CmsError && status < 500) return
   const message = String(error?.message ?? "Unknown error")
     .replace(/[A-Za-z0-9_-]{24,}/g, "[redacted]")
   console.error(JSON.stringify({

@@ -68,6 +68,25 @@ test("maps controlled provider errors to JSON API errors", async () => {
   }
 })
 
+test("logs controlled server errors", async () => {
+  const originalError = console.error
+  const logged = []
+  console.error = (...args) => logged.push(args.join(" "))
+  const server = await withServer(async () => {
+    throw new CmsError(502, "Framer accepted the create request, but the new post was not returned.")
+  })
+
+  try {
+    const response = await post(server.url, JSON.stringify({ operation: "create", websiteId: "personal-site" }))
+    assert.equal(response.status, 502)
+    assert.equal(logged.length, 1)
+    assert.match(logged[0], /new post was not returned/)
+  } finally {
+    console.error = originalError
+    await server.close()
+  }
+})
+
 test("redacts unexpected SDK failures", async () => {
   const server = await withServer(async () => {
     throw new Error("secret stack with token")
