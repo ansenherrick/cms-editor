@@ -61,6 +61,8 @@ class FileBackedCmsProvider(
         post
     }
 
+    override suspend fun deploySite(websiteId: String): SiteDeployment = SiteDeployment()
+
     private fun postsFor(websiteId: String): MutableMap<String, BlogPost> =
         postsByWebsite.getOrPut(websiteId) {
             mutableMapOf(

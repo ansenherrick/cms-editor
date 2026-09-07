@@ -59,6 +59,9 @@ class FramerCmsProvider(
     override suspend fun setPublished(websiteId: String, postId: String, isPublished: Boolean): BlogPost =
         rpc(websiteId, FramerRequest(operation = "setPublished", postId = postId, isPublished = isPublished), PostSerializer)
 
+    override suspend fun deploySite(websiteId: String): SiteDeployment =
+        rpc(websiteId, FramerRequest(operation = "deploy"), SiteDeploymentSerializer)
+
     private suspend inline fun <reified T> rpc(websiteId: String, request: FramerRequest, serializer: ResponseSerializer<T>): T {
         if (websiteId != this.websiteId) {
             throw CmsProviderException(403, "This API is configured for website '${this.websiteId}'.")
@@ -147,6 +150,10 @@ private object PostSerializer : ResponseSerializer<BlogPost> {
 
 private object ListSerializer : ResponseSerializer<List<BlogPost>> {
     override fun decode(json: Json, body: String): List<BlogPost> = json.decodeFromString(body)
+}
+
+private object SiteDeploymentSerializer : ResponseSerializer<SiteDeployment> {
+    override fun decode(json: Json, body: String): SiteDeployment = json.decodeFromString(body)
 }
 
 @Serializable

@@ -59,14 +59,6 @@ if ($provider -eq "framer") {
         $collection = "blog-posts"
     }
     [Environment]::SetEnvironmentVariable("CMS_FRAMER_COLLECTION", $collection, "Process")
-    $autoDeploy = Get-UserEnvironmentValue "CMS_FRAMER_AUTO_DEPLOY"
-    if ([string]::IsNullOrWhiteSpace($autoDeploy)) {
-        $autoDeploy = "true"
-    }
-    if ($autoDeploy -notin @("true", "false")) {
-        throw "CMS_FRAMER_AUTO_DEPLOY must be either 'true' or 'false'."
-    }
-    [Environment]::SetEnvironmentVariable("CMS_FRAMER_AUTO_DEPLOY", $autoDeploy, "Process")
     $composeArgs += @("-f", (Join-Path $PSScriptRoot "compose.framer.yaml"))
 }
 

@@ -9,6 +9,7 @@ interface CmsProvider {
     suspend fun updatePost(websiteId: String, postId: String, draft: BlogPostDraft): BlogPost
     suspend fun deletePost(websiteId: String, postId: String)
     suspend fun setPublished(websiteId: String, postId: String, isPublished: Boolean): BlogPost
+    suspend fun deploySite(websiteId: String): SiteDeployment
 }
 
 class PostNotFoundException(postId: String) : NoSuchElementException("Post '$postId' was not found.")

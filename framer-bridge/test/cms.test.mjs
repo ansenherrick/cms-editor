@@ -200,7 +200,7 @@ test("unpublishing only toggles Framer draft status", async () => {
   assert.equal(post.isPublished, false)
 })
 
-test("publishing only changes the CMS item when auto-deploy is disabled", async () => {
+test("publishing only changes the CMS item status", async () => {
   const ctx = fixture()
   const post = await executeCms(ctx.framer, config, {
     operation: "setPublished",
@@ -214,24 +214,21 @@ test("publishing only changes the CMS item when auto-deploy is disabled", async 
   assert.equal(ctx.calls.some((call) => call[0] === "deploy"), false)
 })
 
-test("publishing deploys the Framer project when auto-deploy is enabled", async () => {
+test("deploy publishes and deploys the Framer project", async () => {
   const ctx = fixture()
-  const post = await executeCms(ctx.framer, { ...config, autoDeploy: true }, {
-    operation: "setPublished",
+  const deployment = await executeCms(ctx.framer, config, {
+    operation: "deploy",
     websiteId: "personal-site",
-    postId: "item-1",
-    isPublished: true,
   })
 
-  assert.equal(post.isPublished, true)
+  assert.deepEqual(deployment, { deploymentId: "deployment-1", hostnames: ["www.example.com"] })
   assert.deepEqual(ctx.calls.filter((call) => ["setAttributes", "publish", "deploy"].includes(call[0])), [
-    ["setAttributes", "item-1", { draft: false }],
     ["publish"],
     ["deploy", "deployment-1"],
   ])
 })
 
-test("publishing surfaces Framer deployment errors after changing item status", async () => {
+test("deploy surfaces Framer deployment errors without changing item status", async () => {
   const ctx = fixture()
   ctx.framer.deploy = async () => {
     ctx.calls.push(["deploy"])
@@ -239,15 +236,13 @@ test("publishing surfaces Framer deployment errors after changing item status", 
   }
 
   await assert.rejects(
-    executeCms(ctx.framer, { ...config, autoDeploy: true }, {
-      operation: "setPublished",
+    executeCms(ctx.framer, config, {
+      operation: "deploy",
       websiteId: "personal-site",
-      postId: "item-1",
-      isPublished: true,
     }),
     /Framer deploy failed/,
   )
-  assert.equal(ctx.calls.some((call) => call[0] === "setAttributes"), true)
+  assert.equal(ctx.calls.some((call) => call[0] === "setAttributes"), false)
 })
 
 test("rejects wrong website before reading Framer", async () => {

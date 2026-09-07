@@ -31,9 +31,11 @@ export async function executeCms(framer, config, request) {
     throw new CmsError(403, `This Framer provider is configured for website '${config.websiteId}'.`)
   }
 
-  if (!["inspect", "list", "create", "update", "delete", "setPublished"].includes(request.operation)) {
+  if (!["inspect", "list", "create", "update", "delete", "setPublished", "deploy"].includes(request.operation)) {
     throw new CmsError(400, "Unsupported CMS operation.")
   }
+
+  if (request.operation === "deploy") return publishToProduction(framer)
 
   const context = await loadContext(framer, config)
   switch (request.operation) {
@@ -48,7 +50,7 @@ export async function executeCms(framer, config, request) {
     case "delete":
       return deletePost(context, request.postId)
     case "setPublished":
-      return setPublished(framer, context, request.postId, request.isPublished, config.autoDeploy === true)
+      return setPublished(context, request.postId, request.isPublished)
   }
 }
 
@@ -163,20 +165,23 @@ async function deletePost(context, postId) {
   return { ok: true }
 }
 
-async function setPublished(framer, context, postId, isPublished, autoDeploy) {
+async function setPublished(context, postId, isPublished) {
   validatePostId(postId)
   if (typeof isPublished !== "boolean") throw new CmsError(400, "isPublished is required.")
   const item = await findItem(context, postId)
   const updated = await item.setAttributes({ draft: !isPublished })
   if (!updated) throw new CmsError(404, `Post '${postId}' was not found.`)
-  if (isPublished && autoDeploy) await publishToProduction(framer)
   return toPost(context, updated)
 }
 
 async function publishToProduction(framer) {
   const { deployment } = await framer.publish()
   if (!deployment?.id) throw new CmsError(502, "Framer did not return a deployment after publishing.")
-  await framer.deploy(deployment.id)
+  const hostnames = await framer.deploy(deployment.id)
+  return {
+    deploymentId: deployment.id,
+    hostnames: hostnames.map((hostname) => typeof hostname === "string" ? hostname : hostname.hostname).filter(Boolean),
+  }
 }
 
 async function findItem(context, postId) {

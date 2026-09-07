@@ -42,6 +42,10 @@ struct BlogPostAPI {
         )
     }
 
+    func deploySite() async throws -> SiteDeployment {
+        try await send(path: "/v1/websites/\(websiteId)/deploy", method: "POST")
+    }
+
     private var postsPath: String { "/v1/websites/\(websiteId)/posts" }
 
     private func send<Response: Decodable>(
@@ -84,6 +88,17 @@ struct ImageUpload: Decodable {
     let width: Int
     let height: Int
     let checksumSha256: String
+}
+
+struct SiteDeployment: Decodable {
+    let deploymentId: String?
+    let hostnames: [String]
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        deploymentId = try container.decodeIfPresent(String.self, forKey: .deploymentId)
+        hostnames = try container.decodeIfPresent([String].self, forKey: .hostnames) ?? []
+    }
 }
 
 private struct APIProblems: Decodable {

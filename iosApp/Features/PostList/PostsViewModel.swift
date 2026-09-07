@@ -5,7 +5,9 @@ import Foundation
 final class PostsViewModel: ObservableObject {
     @Published private(set) var posts: [BlogPost] = []
     @Published private(set) var isLoading = false
+    @Published private(set) var isDeploying = false
     @Published var errorMessage: String?
+    @Published var successMessage: String?
 
     private let api: BlogPostAPI
 
@@ -51,6 +53,19 @@ final class PostsViewModel: ObservableObject {
 
     func uploadImage(data: Data, filename: String, contentType: String) async throws -> ImageUpload {
         try await api.uploadImage(data: data, filename: filename, contentType: contentType)
+    }
+
+    func deploySite() async {
+        isDeploying = true
+        defer { isDeploying = false }
+
+        do {
+            let deployment = try await api.deploySite()
+            let hostnames = deployment.hostnames.joined(separator: ", ")
+            successMessage = hostnames.isEmpty ? "Site deployment started." : "Site deployed to \(hostnames)."
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func delete(_ post: BlogPost) async {

@@ -72,7 +72,9 @@ Windows User variables:
 
 The startup script generates a private bridge token each time it starts; do not
 set `CMS_FRAMER_BRIDGE_TOKEN` yourself. See
-[../../FRAMER.md](../../FRAMER.md) for the field mapping and test checklist.
+[../../FRAMER.md](../../FRAMER.md) for the field mapping and test checklist. The
+iPhone app can publish CMS item status and has a separate **Deploy site** action
+for pushing Framer changes to the public domain.
 
 ## Start it
 

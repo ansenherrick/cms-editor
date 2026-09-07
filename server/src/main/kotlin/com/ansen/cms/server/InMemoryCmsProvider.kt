@@ -39,6 +39,8 @@ class InMemoryCmsProvider : CmsProvider {
         return existing.copy(isPublished = isPublished).also { posts[postId] = it }
     }
 
+    override suspend fun deploySite(websiteId: String): SiteDeployment = SiteDeployment()
+
     private fun postsFor(websiteId: String) = postsByWebsite.computeIfAbsent(websiteId) {
         ConcurrentHashMap<String, BlogPost>().apply {
             val sample = BlogPost(

@@ -32,12 +32,10 @@ The bridge expects an editable, user-managed collection with these fields:
 
 `Image Size` enum cases should be `Small`, `Medium`, `Large`, and `Wide`.
 Framer's built-in draft status remains the source of truth for publish state.
-With `CMS_FRAMER_AUTO_DEPLOY=true` (the Windows Framer deployment default), the
-app's **Publish** button marks the CMS item published, then publishes and deploys
-the Framer project to its configured custom domain. **Unpublish** only changes
-the CMS item status. A live deployment includes every unpublished project change,
-not only the blog post. Set `CMS_FRAMER_AUTO_DEPLOY=false` as a Windows User
-environment variable to keep publishing as a CMS-only action.
+The app's **Publish** and **Unpublish** actions only change that CMS item status.
+Use **Deploy site** from the phone when you want Framer to publish and deploy the
+project to its configured custom domain. A live deployment includes every
+unpublished Framer project change, not only the blog post.
 
 ## Enable it on the Windows Docker host
 
@@ -79,9 +77,10 @@ passes, open the iPhone app and refresh the `Personal site` profile.
 3. Add an image through the app and confirm the saved Framer item has the R2
    `Image Link`, `Image Alt Text`, and `Image Size`.
 4. Edit the title/body and confirm Framer updates the same CMS item.
-5. Use **Publish** in the app and confirm the Framer item is published and the
-   configured public domain receives the new deployment.
-6. Use **Unpublish** and confirm it only changes the Framer item status.
+5. Use **Publish** in the app and confirm the Framer item is published.
+6. Use **Deploy site** from the post list menu and confirm the configured public
+   domain receives the new deployment.
+7. Use **Unpublish** and confirm it only changes the Framer item status.
 
 Existing local JSON posts stay in the Docker volume. They are not automatically
 migrated into Framer.

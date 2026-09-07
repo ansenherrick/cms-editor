@@ -82,6 +82,15 @@ fun Application.module(
         route("/health") {
             get { call.respond(HealthResponse(status = "ok")) }
         }
+        route("/v1/websites/{websiteId}/deploy") {
+            post {
+                val websiteId = call.websiteId()
+                val principal = security.authorize(call, websiteId, isWrite = true) ?: return@post
+                val deployment = provider.deploySite(websiteId)
+                auditLogger.record(principal, "site.deploy", websiteId, deployment.deploymentId ?: "unknown")
+                call.respond(deployment)
+            }
+        }
         route("/v1/websites/{websiteId}/posts") {
             get {
                 val websiteId = call.websiteId()
@@ -161,3 +170,9 @@ data class ApiError(val problems: List<String>)
 
 @Serializable
 data class HealthResponse(val status: String)
+
+@Serializable
+data class SiteDeployment(
+    val deploymentId: String? = null,
+    val hostnames: List<String> = emptyList(),
+)

@@ -59,6 +59,20 @@ class FramerCmsProviderTest {
     }
 
     @Test
+    fun deploySiteCallsPrivateBridge() = runTest {
+        withBridge("""{"deploymentId":"deployment-1","hostnames":["ansenherrick.com"]}""") { bridge ->
+            val provider = FramerCmsProvider(bridge.url, bridge.token, "personal-site")
+
+            val deployment = provider.deploySite("personal-site")
+
+            assertEquals("deployment-1", deployment.deploymentId)
+            assertEquals(listOf("ansenherrick.com"), deployment.hostnames)
+            assertContains(bridge.requests.single().body, """"operation":"deploy"""")
+            assertContains(bridge.requests.single().body, """"websiteId":"personal-site"""")
+        }
+    }
+
+    @Test
     fun bridgeConflictDoesNotRetryOrFallback() = runTest {
         withBridge("""{"problems":["Schema mismatch."]}""", status = 409) { bridge ->
             val provider = FramerCmsProvider(bridge.url, bridge.token, "personal-site")

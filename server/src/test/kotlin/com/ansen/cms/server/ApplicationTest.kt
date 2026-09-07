@@ -46,4 +46,19 @@ class ApplicationTest {
         val delete = client.delete("/v1/websites/first-site/posts/$postId")
         assertEquals(HttpStatusCode.NoContent, delete.status)
     }
+
+    @Test
+    fun `deploy endpoint delegates to the provider`() = testApplication {
+        val provider = object : CmsProvider by InMemoryCmsProvider() {
+            override suspend fun deploySite(websiteId: String): SiteDeployment =
+                SiteDeployment(deploymentId = "deployment-1", hostnames = listOf("ansenherrick.com"))
+        }
+        application { module(provider) }
+
+        val deploy = client.post("/v1/websites/first-site/deploy")
+
+        assertEquals(HttpStatusCode.OK, deploy.status)
+        assertContains(deploy.bodyAsText(), "deployment-1")
+        assertContains(deploy.bodyAsText(), "ansenherrick.com")
+    }
 }
