@@ -12,8 +12,10 @@ The Xcode project already exists at `../CMSEditor/CMSEditor.xcodeproj`.
    the subfolders and leaving **Copy items if needed** unchecked.
 3. Remove the generated `CMSEditorApp.swift` and `ContentView.swift` from the
    target. `CmsEditorApp.swift` in this folder is the app entry point.
-4. In the target's Info settings, add **App Transport Security Settings → Allow
-   Arbitrary Loads = YES** for local HTTP development only. `Config/Info.plist`
-   is a reference for this one setting; do not replace the generated Info.plist.
+4. In the target's Info settings, add **Privacy - Camera Usage Description** with
+   the value `Take photos to add them to blog posts.` Also add **App Transport
+   Security Settings → Allow Arbitrary Loads = YES** for local HTTP development
+   only. `Config/Info.plist` is a reference for these settings; do not replace
+   the generated Info.plist.
 
 With the Ktor server running, the iOS Simulator reaches it at `http://127.0.0.1:8080`. Before a device or production build, replace this with your HTTPS API URL and remove `NSAllowsArbitraryLoads`.
