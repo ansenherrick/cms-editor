@@ -17,7 +17,12 @@ key only from the Windows User environment.
 Run `.\deploy\windows\start-cms.ps1 -Build`, then
 `.\deploy\windows\start-cms.ps1 -CheckFramer` after setting `FRAMER_API_KEY` and
 `CMS_PROVIDER=framer`. The schema check is read-only and prints collection/field
-metadata, not post contents. Framer site-wide publish/deploy remains manual.
+metadata, not post contents. With the Windows default
+`CMS_FRAMER_AUTO_DEPLOY=true`, the iPhone app's Publish action marks the CMS item
+published, then calls Framer `publish()` and `deploy()` so the configured custom
+domain receives the change. This deploys every unpublished Framer project change,
+not only the current blog post. Set `CMS_FRAMER_AUTO_DEPLOY=false` to make the
+app change CMS item status only.
 
 Tests run in this repair session:
 

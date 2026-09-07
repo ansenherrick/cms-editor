@@ -4,7 +4,7 @@ import { executeCms, CmsError } from "../src/cms.mjs"
 
 const config = { websiteId: "personal-site", collection: "blog-posts" }
 
-function fixture({ fields = defaultFields(), collections, permissions = {} } = {}) {
+function fixture({ fields = defaultFields(), collections } = {}) {
   const calls = []
   const items = [
     makeItem({
@@ -55,10 +55,6 @@ function fixture({ fields = defaultFields(), collections, permissions = {} } = {
       async getCollections() {
         calls.push(["getCollections"])
         return collections ?? [collection]
-      },
-      async isAllowedTo(action) {
-        calls.push(["isAllowedTo", action])
-        return permissions[action] ?? true
       },
       async publish() {
         calls.push(["publish"])
@@ -228,17 +224,20 @@ test("publishing deploys the Framer project when auto-deploy is enabled", async 
   })
 
   assert.equal(post.isPublished, true)
-  assert.deepEqual(ctx.calls.filter((call) => ["isAllowedTo", "setAttributes", "publish", "deploy"].includes(call[0])), [
-    ["isAllowedTo", "publish"],
-    ["isAllowedTo", "deploy"],
+  assert.deepEqual(ctx.calls.filter((call) => ["setAttributes", "publish", "deploy"].includes(call[0])), [
     ["setAttributes", "item-1", { draft: false }],
     ["publish"],
     ["deploy", "deployment-1"],
   ])
 })
 
-test("publishing does not change the CMS item when Framer deployment permission is missing", async () => {
-  const ctx = fixture({ permissions: { deploy: false } })
+test("publishing surfaces Framer deployment errors after changing item status", async () => {
+  const ctx = fixture()
+  ctx.framer.deploy = async () => {
+    ctx.calls.push(["deploy"])
+    throw new Error("Framer deploy failed")
+  }
+
   await assert.rejects(
     executeCms(ctx.framer, { ...config, autoDeploy: true }, {
       operation: "setPublished",
@@ -246,9 +245,9 @@ test("publishing does not change the CMS item when Framer deployment permission 
       postId: "item-1",
       isPublished: true,
     }),
-    (error) => error instanceof CmsError && error.status === 403,
+    /Framer deploy failed/,
   )
-  assert.equal(ctx.calls.some((call) => call[0] === "setAttributes"), false)
+  assert.equal(ctx.calls.some((call) => call[0] === "setAttributes"), true)
 })
 
 test("rejects wrong website before reading Framer", async () => {

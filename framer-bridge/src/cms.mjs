@@ -166,22 +166,11 @@ async function deletePost(context, postId) {
 async function setPublished(framer, context, postId, isPublished, autoDeploy) {
   validatePostId(postId)
   if (typeof isPublished !== "boolean") throw new CmsError(400, "isPublished is required.")
-  if (isPublished && autoDeploy) await requireDeploymentPermissions(framer)
   const item = await findItem(context, postId)
   const updated = await item.setAttributes({ draft: !isPublished })
   if (!updated) throw new CmsError(404, `Post '${postId}' was not found.`)
   if (isPublished && autoDeploy) await publishToProduction(framer)
   return toPost(context, updated)
-}
-
-async function requireDeploymentPermissions(framer) {
-  const [canPublish, canDeploy] = await Promise.all([
-    framer.isAllowedTo("publish"),
-    framer.isAllowedTo("deploy"),
-  ])
-  if (!canPublish || !canDeploy) {
-    throw new CmsError(403, "The configured Framer API key is not allowed to publish and deploy this project.")
-  }
 }
 
 async function publishToProduction(framer) {
