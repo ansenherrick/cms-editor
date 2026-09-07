@@ -45,7 +45,7 @@ struct BlogPostDraft: Codable, Equatable {
     }
 }
 
-private extension String {
+extension String {
     var plainTextFromHTML: String {
         guard contains("<") else { return self }
         let withLineBreaks = replacingOccurrences(of: "</p>", with: "\n\n", options: .caseInsensitive)
