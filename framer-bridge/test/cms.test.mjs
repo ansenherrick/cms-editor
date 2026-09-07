@@ -4,7 +4,7 @@ import { executeCms, CmsError } from "../src/cms.mjs"
 
 const config = { websiteId: "personal-site", collection: "blog-posts" }
 
-function fixture({ fields = defaultFields(), collections } = {}) {
+function fixture({ fields = defaultFields(), collections, permissions = {} } = {}) {
   const calls = []
   const items = [
     makeItem({
@@ -55,6 +55,18 @@ function fixture({ fields = defaultFields(), collections } = {}) {
       async getCollections() {
         calls.push(["getCollections"])
         return collections ?? [collection]
+      },
+      async isAllowedTo(action) {
+        calls.push(["isAllowedTo", action])
+        return permissions[action] ?? true
+      },
+      async publish() {
+        calls.push(["publish"])
+        return { deployment: { id: "deployment-1" } }
+      },
+      async deploy(deploymentId) {
+        calls.push(["deploy", deploymentId])
+        return ["www.example.com"]
       },
     },
     collection,
@@ -178,7 +190,7 @@ test("update preserves slug, draft state, and unknown Framer fields", async () =
   assert.equal(post.imageSize, "WIDE")
 })
 
-test("setPublished only toggles Framer draft status", async () => {
+test("unpublishing only toggles Framer draft status", async () => {
   const ctx = fixture()
   const post = await executeCms(ctx.framer, config, {
     operation: "setPublished",
@@ -190,6 +202,53 @@ test("setPublished only toggles Framer draft status", async () => {
   const update = ctx.calls.find((call) => call[0] === "setAttributes")
   assert.deepEqual(update[2], { draft: true })
   assert.equal(post.isPublished, false)
+})
+
+test("publishing only changes the CMS item when auto-deploy is disabled", async () => {
+  const ctx = fixture()
+  const post = await executeCms(ctx.framer, config, {
+    operation: "setPublished",
+    websiteId: "personal-site",
+    postId: "item-1",
+    isPublished: true,
+  })
+
+  assert.equal(post.isPublished, true)
+  assert.equal(ctx.calls.some((call) => call[0] === "publish"), false)
+  assert.equal(ctx.calls.some((call) => call[0] === "deploy"), false)
+})
+
+test("publishing deploys the Framer project when auto-deploy is enabled", async () => {
+  const ctx = fixture()
+  const post = await executeCms(ctx.framer, { ...config, autoDeploy: true }, {
+    operation: "setPublished",
+    websiteId: "personal-site",
+    postId: "item-1",
+    isPublished: true,
+  })
+
+  assert.equal(post.isPublished, true)
+  assert.deepEqual(ctx.calls.filter((call) => ["isAllowedTo", "setAttributes", "publish", "deploy"].includes(call[0])), [
+    ["isAllowedTo", "publish"],
+    ["isAllowedTo", "deploy"],
+    ["setAttributes", "item-1", { draft: false }],
+    ["publish"],
+    ["deploy", "deployment-1"],
+  ])
+})
+
+test("publishing does not change the CMS item when Framer deployment permission is missing", async () => {
+  const ctx = fixture({ permissions: { deploy: false } })
+  await assert.rejects(
+    executeCms(ctx.framer, { ...config, autoDeploy: true }, {
+      operation: "setPublished",
+      websiteId: "personal-site",
+      postId: "item-1",
+      isPublished: true,
+    }),
+    (error) => error instanceof CmsError && error.status === 403,
+  )
+  assert.equal(ctx.calls.some((call) => call[0] === "setAttributes"), false)
 })
 
 test("rejects wrong website before reading Framer", async () => {

@@ -10,6 +10,7 @@ for (const name of required) {
   }
 }
 
+const autoDeploy = readBoolean("CMS_FRAMER_AUTO_DEPLOY", false)
 const runWithSession = createSessionRunner(connect, process.env.FRAMER_PROJECT_URL, process.env.FRAMER_API_KEY)
 const server = createBridgeServer({
   token: process.env.FRAMER_BRIDGE_TOKEN,
@@ -18,6 +19,7 @@ const server = createBridgeServer({
     project: process.env.FRAMER_PROJECT_URL,
     collection: process.env.FRAMER_COLLECTION,
     websiteId: process.env.CMS_WEBSITE_ID,
+    autoDeploy,
   },
 })
 
@@ -33,4 +35,13 @@ for (const signal of ["SIGINT", "SIGTERM"]) {
     server.close(() => process.exit(0))
     setTimeout(() => process.exit(0), 5_000).unref()
   })
+}
+
+function readBoolean(name, defaultValue) {
+  const value = process.env[name]
+  if (value == null || value === "") return defaultValue
+  if (value === "true") return true
+  if (value === "false") return false
+  console.error(`${name} must be 'true' or 'false'.`)
+  process.exit(1)
 }

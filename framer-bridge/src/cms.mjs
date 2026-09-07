@@ -48,7 +48,7 @@ export async function executeCms(framer, config, request) {
     case "delete":
       return deletePost(context, request.postId)
     case "setPublished":
-      return setPublished(context, request.postId, request.isPublished)
+      return setPublished(framer, context, request.postId, request.isPublished, config.autoDeploy === true)
   }
 }
 
@@ -163,13 +163,31 @@ async function deletePost(context, postId) {
   return { ok: true }
 }
 
-async function setPublished(context, postId, isPublished) {
+async function setPublished(framer, context, postId, isPublished, autoDeploy) {
   validatePostId(postId)
   if (typeof isPublished !== "boolean") throw new CmsError(400, "isPublished is required.")
+  if (isPublished && autoDeploy) await requireDeploymentPermissions(framer)
   const item = await findItem(context, postId)
   const updated = await item.setAttributes({ draft: !isPublished })
   if (!updated) throw new CmsError(404, `Post '${postId}' was not found.`)
+  if (isPublished && autoDeploy) await publishToProduction(framer)
   return toPost(context, updated)
+}
+
+async function requireDeploymentPermissions(framer) {
+  const [canPublish, canDeploy] = await Promise.all([
+    framer.isAllowedTo("publish"),
+    framer.isAllowedTo("deploy"),
+  ])
+  if (!canPublish || !canDeploy) {
+    throw new CmsError(403, "The configured Framer API key is not allowed to publish and deploy this project.")
+  }
+}
+
+async function publishToProduction(framer) {
+  const { deployment } = await framer.publish()
+  if (!deployment?.id) throw new CmsError(502, "Framer did not return a deployment after publishing.")
+  await framer.deploy(deployment.id)
 }
 
 async function findItem(context, postId) {
