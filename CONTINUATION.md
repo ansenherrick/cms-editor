@@ -2,6 +2,30 @@
 
 Last updated: 2026-09-06
 
+## 2026-09-06 - Framer provider implemented
+
+The user provided the Framer project URL
+`https://framer.com/projects/Personal-Website--Qi2it0L3x4vLRZFcsOSe` and the
+collection name `blog-posts`.
+
+The repo now includes an opt-in Framer CMS provider. `CMS_PROVIDER` defaults to
+`file`; setting `CMS_PROVIDER=framer` on the Windows Docker host adds the
+private `framer-bridge` service from `deploy/windows/compose.framer.yaml`.
+`start-cms.ps1` generates the bridge token at startup and reads the Framer API
+key only from the Windows User environment.
+
+Run `.\deploy\windows\start-cms.ps1 -Build`, then
+`.\deploy\windows\start-cms.ps1 -CheckFramer` after setting `FRAMER_API_KEY` and
+`CMS_PROVIDER=framer`. The schema check is read-only and prints collection/field
+metadata, not post contents. Framer site-wide publish/deploy remains manual.
+
+Tests run in this repair session:
+
+```text
+node --test test/*.test.mjs
+gradle --no-daemon --console=plain :server:test
+```
+
 ## 2026-09-06 - Repository prepared for Mac/Windows synchronization
 
 The user reports that the repaired services started and the app is working.

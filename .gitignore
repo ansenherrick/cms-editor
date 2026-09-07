@@ -43,3 +43,7 @@ serverData/
 # Empty artifacts from the original copied project
 /A
 /Compilation
+
+# Framer SDK dependencies
+node_modules/
+.pnpm-store/

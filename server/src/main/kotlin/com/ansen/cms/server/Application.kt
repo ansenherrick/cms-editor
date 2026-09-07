@@ -32,7 +32,7 @@ fun main() {
     val behindTunnel = System.getenv("CMS_BEHIND_TUNNEL")?.equals("true", ignoreCase = true) == true
     validateBindHost(mode, host, behindTunnel)
     embeddedServer(Netty, port = System.getenv("CMS_PORT")?.toIntOrNull() ?: 8080, host = host, module = {
-        module(FileBackedCmsProvider(storagePath), R2ImageStorage.fromEnvironment(), security, StructuredAuditLogger { environment.log.info(it) })
+        module(configuredCmsProvider(storagePath), R2ImageStorage.fromEnvironment(), security, StructuredAuditLogger { environment.log.info(it) })
     }).start(wait = true)
 }
 
@@ -69,6 +69,9 @@ fun Application.module(
         }
         exception<PostNotFoundException> { call, cause ->
             call.respond(HttpStatusCode.NotFound, ApiError(listOf(cause.message ?: "Post not found.")))
+        }
+        exception<CmsProviderException> { call, cause ->
+            call.respond(HttpStatusCode.fromValue(cause.statusCode), ApiError(listOf(cause.message)))
         }
         exception<IllegalArgumentException> { call, cause ->
             call.respond(HttpStatusCode.BadRequest, ApiError(listOf(cause.message ?: "Invalid request.")))

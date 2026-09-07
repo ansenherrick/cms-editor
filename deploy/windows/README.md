@@ -23,7 +23,7 @@ home IP, dynamic-DNS service, or router port-forwarding is required.
 
 Open **PowerShell** and run the following commands one at a time. Enter the
 actual value when Windows prompts you. Do not paste any of these values into
-source files or chat.+
+source files or chat.
 
 ```powershell
 [Environment]::SetEnvironmentVariable("CF_TUNNEL_TOKEN", (Read-Host "Cloudflare tunnel token"), "User")
@@ -58,6 +58,21 @@ CMS_R2_PUBLIC_BASE_URL=https://assets.ansenherrick.com
 The Compose file supplies those two non-secret values. Set all other variables
 above as **User** variables, close PowerShell, then open a fresh window so it
 receives them.
+
+## Optional: connect posts to Framer
+
+The default provider stores posts in the local Docker volume. To use Framer's
+`blog-posts` collection instead, create a Framer API key in Framer and set these
+Windows User variables:
+
+```powershell
+[Environment]::SetEnvironmentVariable("FRAMER_API_KEY", (Read-Host "Framer API key"), "User")
+[Environment]::SetEnvironmentVariable("CMS_PROVIDER", "framer", "User")
+```
+
+The startup script generates a private bridge token each time it starts; do not
+set `CMS_FRAMER_BRIDGE_TOKEN` yourself. See
+[../../FRAMER.md](../../FRAMER.md) for the field mapping and test checklist.
 
 ## Start it
 
@@ -102,6 +117,7 @@ Run it under the same Windows account that owns the User environment variables.
 # Status and logs
 docker compose --project-directory . ps
 docker compose --project-directory . logs --tail 100 cms-api
+docker compose --project-directory . logs --tail 100 framer-bridge
 docker compose --project-directory . logs --tail 100 cloudflared
 
 # Stop without deleting data
@@ -115,10 +131,11 @@ The local prototype stores its fallback data in Docker volume `cms-editor-data`.
 Do not run `docker compose down --volumes` unless you intentionally want to
 erase that local fallback data.
 
-## Important limitation
+## Framer check
 
-This deploys the secure API, image uploads, and local fallback storage. The
-current codebase does **not** yet have `FramerCmsProvider`, so posts made through
-this host will not reach Framer until that provider is implemented and configured
-with a server-only Framer access value. Do not treat this as a live publishing
-system yet.
+When `CMS_PROVIDER=framer`, run this after startup to verify the collection and
+field mapping without reading post content:
+
+```powershell
+.\start-cms.ps1 -CheckFramer
+```

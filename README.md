@@ -7,7 +7,10 @@ The initial project contains a Kotlin Multiplatform domain module and a Kotlin/K
 ## Modules
 
 - `shared`: serializable blog-post models and validation that iOS and Android can reuse.
-- `server`: Ktor JSON API and `InMemoryCmsProvider` implementation.
+- `server`: Ktor JSON API with local file-backed storage by default and an
+  opt-in Framer provider for production.
+- `framer-bridge`: private Node service that uses the official Framer Server API
+  SDK so the mobile app never needs a Framer key.
 
 ## API
 
@@ -28,7 +31,7 @@ Install a JDK 21+ and Gradle, then run:
 gradle :server:run
 ```
 
-The server runs on `http://localhost:8080`; `GET /health` returns its status. By default, local posts are stored in `serverData/cms-posts.json`; override the path with the JVM system property `cms.storage.path` if needed. Authentication and the Framer provider are intentional next steps before exposing this server beyond local development.
+The server runs on `http://localhost:8080`; `GET /health` returns its status. By default, local posts are stored in `serverData/cms-posts.json`; override the path with the JVM system property `cms.storage.path` if needed.
 
 ## Current iOS status
 
@@ -39,7 +42,8 @@ for each selected website ID.
 
 ## Next milestone
 
-Add a native SwiftUI post list and editor backed by these routes, then replace `InMemoryCmsProvider` with a Framer-specific server adapter. The mobile app will never contain a Framer API key.
+The hosted Windows deployment can now be switched from local JSON storage to
+Framer CMS. See [FRAMER.md](FRAMER.md) before enabling it.
 
 ## Security
 
@@ -49,8 +53,8 @@ configuration boundary, and requirements before public launch.
 
 ## Windows home-PC deployment
 
-The project now includes a Docker Desktop + Cloudflare Tunnel deployment for a
+The project includes a Docker Desktop + Cloudflare Tunnel deployment for a
 Windows 10 home PC. It keeps the API off the public home network and exposes it
 at an HTTPS hostname through Cloudflare. Follow
-[deploy/windows/README.md](deploy/windows/README.md). This is a hosting setup,
-not a replacement for the still-pending Framer CMS provider.
+[deploy/windows/README.md](deploy/windows/README.md). Framer CMS support is
+available as an opt-in Compose overlay.
