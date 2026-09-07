@@ -57,21 +57,3 @@ struct PostDetailView: View {
         }
     }
 }
-
-private extension String {
-    var plainTextFromHTML: String {
-        guard contains("<") else { return self }
-        guard let data = data(using: .utf8),
-              let attributed = try? NSAttributedString(
-                data: data,
-                options: [
-                    .documentType: NSAttributedString.DocumentType.html,
-                    .characterEncoding: String.Encoding.utf8.rawValue,
-                ],
-                documentAttributes: nil
-              ) else {
-            return replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
-        }
-        return attributed.string.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-}

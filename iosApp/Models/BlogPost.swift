@@ -48,18 +48,23 @@ struct BlogPostDraft: Codable, Equatable {
 private extension String {
     var plainTextFromHTML: String {
         guard contains("<") else { return self }
-        guard let data = data(using: .utf8),
-              let attributed = try? NSAttributedString(
-                data: data,
-                options: [
-                    .documentType: NSAttributedString.DocumentType.html,
-                    .characterEncoding: String.Encoding.utf8.rawValue,
-                ],
-                documentAttributes: nil
-              ) else {
-            return replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
-        }
-        return attributed.string.trimmingCharacters(in: .whitespacesAndNewlines)
+        let withLineBreaks = replacingOccurrences(of: "</p>", with: "\n\n", options: .caseInsensitive)
+            .replacingOccurrences(of: "<br\\s*/?>", with: "\n", options: [.regularExpression, .caseInsensitive])
+            .replacingOccurrences(of: "</h[1-6]>", with: "\n\n", options: [.regularExpression, .caseInsensitive])
+        return withLineBreaks
+            .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+            .decodingBasicHTMLEntities
+            .replacingOccurrences(of: "\n\n\n+", with: "\n\n", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var decodingBasicHTMLEntities: String {
+        replacingOccurrences(of: "&nbsp;", with: " ")
+            .replacingOccurrences(of: "&amp;", with: "&")
+            .replacingOccurrences(of: "&lt;", with: "<")
+            .replacingOccurrences(of: "&gt;", with: ">")
+            .replacingOccurrences(of: "&quot;", with: "\"")
+            .replacingOccurrences(of: "&#39;", with: "'")
     }
 }
 
