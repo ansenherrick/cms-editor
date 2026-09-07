@@ -29,8 +29,6 @@ struct Website: Codable, Identifiable, Hashable {
         return BlogPostAPI(baseURL: baseURL, websiteId: websiteId, accessToken: AccessTokenStore.accessToken(for: id))
     }
 
-    static let localExample = Website(name: "Personal site", websiteId: "personal-site")
-
     private func isSecureTransport(_ url: URL) -> Bool {
         if url.scheme == "https" { return true }
         return ["127.0.0.1", "localhost", "::1"].contains(url.host?.lowercased())
@@ -47,8 +45,6 @@ final class WebsiteStore: ObservableObject {
         guard let data = UserDefaults.standard.data(forKey: storageKey),
               let saved = try? JSONDecoder().decode([Website].self, from: data)
         else {
-            websites = [.localExample]
-            save()
             return
         }
         websites = saved.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }

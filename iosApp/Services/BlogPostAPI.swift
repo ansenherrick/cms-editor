@@ -5,12 +5,6 @@ struct BlogPostAPI {
     let websiteId: String
     let accessToken: String?
 
-    static let localDevelopment = BlogPostAPI(
-        baseURL: URL(string: "http://127.0.0.1:8080")!,
-        websiteId: "personal-site",
-        accessToken: nil
-    )
-
     func listPosts() async throws -> [BlogPost] {
         try await send(path: postsPath)
     }
