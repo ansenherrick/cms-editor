@@ -31,10 +31,10 @@ struct BlogPostDraft: Codable, Equatable {
         imageUrl = post?.imageUrl
         imageAltText = post?.imageAltText
         imageSize = post?.imageSize
-        subheading = post?.subheading
+        subheading = post?.subheading?.plainTextFromHTML
         link = post?.link
         linkText = post?.linkText
-        bodyText = post?.bodyText ?? ""
+        bodyText = post?.bodyText.plainTextFromHTML ?? ""
     }
 
     private static var today: String {
@@ -42,6 +42,24 @@ struct BlogPostDraft: Codable, Equatable {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: .now)
+    }
+}
+
+private extension String {
+    var plainTextFromHTML: String {
+        guard contains("<") else { return self }
+        guard let data = data(using: .utf8),
+              let attributed = try? NSAttributedString(
+                data: data,
+                options: [
+                    .documentType: NSAttributedString.DocumentType.html,
+                    .characterEncoding: String.Encoding.utf8.rawValue,
+                ],
+                documentAttributes: nil
+              ) else {
+            return replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+        }
+        return attributed.string.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 

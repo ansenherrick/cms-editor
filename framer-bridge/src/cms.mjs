@@ -132,10 +132,19 @@ async function createPost(context, draft) {
   validateDraft(draft)
   await rejectUnknownRequiredFields(context)
   const slug = `${slugify(draft.title)}-${crypto.randomUUID().slice(0, 8)}`
-  await context.collection.addItems([{ slug, draft: true, fieldData: toFieldData(context, draft) }])
-  const created = (await context.collection.getItems()).find((item) => item.slug === slug)
+  await context.collection.addItems([{ slug, draft: true, fieldData: toFieldData(context, draft, { includeEmptyOptionals: false }) }])
+  const created = await findCreatedItem(context, slug)
   if (!created) throw new CmsError(502, "Framer accepted the create request, but the new post was not returned.")
   return toPost(context, created)
+}
+
+async function findCreatedItem(context, slug) {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const created = (await context.collection.getItems()).find((item) => item.slug === slug)
+    if (created) return created
+    await new Promise((resolve) => setTimeout(resolve, 250))
+  }
+  return null
 }
 
 async function updatePost(context, postId, draft) {
@@ -206,11 +215,15 @@ function readField(context, item, key) {
   return value.value ?? null
 }
 
-function toFieldData(context, draft) {
+function toFieldData(context, draft, options = { includeEmptyOptionals: true }) {
   const fieldData = {}
   for (const [key, spec] of fieldSpecByKey.entries()) {
     const field = context.fieldMap.get(key)
     const value = draft[key] ?? null
+    const isRequired = requiredFieldSpecs.includes(spec)
+    if (!isRequired && !options.includeEmptyOptionals && (value === null || value === "")) {
+      continue
+    }
     if (!field) {
       if (value !== null && value !== "") throw new CmsError(409, `Framer collection is missing optional field '${spec.names[0]}'.`)
       continue
@@ -222,7 +235,7 @@ function toFieldData(context, draft) {
 }
 
 function encodeFieldValue(field, spec, value) {
-  if (field.type === "formattedText") return { type: "formattedText", value: value ?? "", contentType: "auto" }
+  if (field.type === "formattedText") return { type: "formattedText", value: value ?? "", contentType: "markdown" }
   if (field.type === "date") return { type: "date", value: `${value}T00:00:00.000Z` }
   if (field.type === "link") return { type: "link", value: value || null }
   if (field.type === "enum") return { type: "enum", value: value ? findEnumCaseId(field, value) : "" }

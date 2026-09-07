@@ -51,6 +51,7 @@ async function runRpc(body, response, runWithSession, config) {
   } catch (error) {
     if (response.destroyed) return
     const mapped = mapError(error)
+    logBridgeError(error, mapped.status)
     send(response, mapped.status, { problems: [mapped.message] })
   }
 }
@@ -59,6 +60,19 @@ function mapError(error) {
   if (error instanceof CmsError) return { status: error.status, message: error.message }
   if (error?.code === "UNAUTHORIZED") return { status: 503, message: "Framer rejected the configured API key." }
   return { status: 502, message: "Framer request failed. Check the bridge logs for details." }
+}
+
+function logBridgeError(error, status) {
+  if (error instanceof CmsError) return
+  const message = String(error?.message ?? "Unknown error")
+    .replace(/[A-Za-z0-9_-]{24,}/g, "[redacted]")
+  console.error(JSON.stringify({
+    level: "error",
+    status,
+    name: error?.name ?? "Error",
+    code: error?.code,
+    message,
+  }))
 }
 
 async function readJsonBody(request) {

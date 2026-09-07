@@ -144,9 +144,21 @@ test("create writes a draft Framer item and returns it", async () => {
   const add = ctx.calls.find((call) => call[0] === "addItems")
   assert.equal(add[1][0].draft, true)
   assert.match(add[1][0].slug, /^updated-title-[a-f0-9-]{8}$/)
-  assert.equal(add[1][0].fieldData.body.contentType, "auto")
+  assert.equal(add[1][0].fieldData.body.contentType, "markdown")
   assert.equal(add[1][0].fieldData.size.value, "case-wide")
   assert.equal(post.title, "Updated Title")
+})
+
+test("create omits empty optional fields", async () => {
+  const ctx = fixture()
+  await executeCms(ctx.framer, config, {
+    operation: "create",
+    websiteId: "personal-site",
+    draft: { date: "2026-09-07", title: "Minimal", bodyText: "Body" },
+  })
+
+  const add = ctx.calls.find((call) => call[0] === "addItems")
+  assert.deepEqual(Object.keys(add[1][0].fieldData).sort(), ["body", "date", "title"])
 })
 
 test("update preserves slug, draft state, and unknown Framer fields", async () => {

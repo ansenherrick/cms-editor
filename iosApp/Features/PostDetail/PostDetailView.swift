@@ -14,14 +14,14 @@ struct PostDetailView: View {
                     .foregroundStyle(post.isPublished ? .green : .orange)
                 Text(post.date).foregroundStyle(.secondary)
                 if let subheading = post.subheading {
-                    Text(subheading).font(.title3).foregroundStyle(.secondary)
+                    Text(subheading.plainTextFromHTML).font(.title3).foregroundStyle(.secondary)
                 }
                 if let imageAltText = post.imageAltText {
                     Text("Image alt text: \(imageAltText)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                Text(post.bodyText).frame(maxWidth: .infinity, alignment: .leading)
+                Text(post.bodyText.plainTextFromHTML).frame(maxWidth: .infinity, alignment: .leading)
                 if let link = post.link, let url = URL(string: link) {
                     Link(post.linkText ?? link, destination: url)
                         .font(.headline)
@@ -55,5 +55,23 @@ struct PostDetailView: View {
         } message: {
             Text("This cannot be undone once connected to Framer.")
         }
+    }
+}
+
+private extension String {
+    var plainTextFromHTML: String {
+        guard contains("<") else { return self }
+        guard let data = data(using: .utf8),
+              let attributed = try? NSAttributedString(
+                data: data,
+                options: [
+                    .documentType: NSAttributedString.DocumentType.html,
+                    .characterEncoding: String.Encoding.utf8.rawValue,
+                ],
+                documentAttributes: nil
+              ) else {
+            return replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+        }
+        return attributed.string.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
