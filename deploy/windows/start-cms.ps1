@@ -45,7 +45,12 @@ $temporaryBridgeToken = $null
 
 if ($provider -eq "framer") {
     $bytes = [byte[]]::new(32)
-    [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+    $random = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    try {
+        $random.GetBytes($bytes)
+    } finally {
+        $random.Dispose()
+    }
     $temporaryBridgeToken = [Convert]::ToBase64String($bytes)
     [Environment]::SetEnvironmentVariable("CMS_FRAMER_BRIDGE_TOKEN", $temporaryBridgeToken, "Process")
 
