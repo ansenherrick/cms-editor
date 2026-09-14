@@ -94,6 +94,11 @@ struct SiteDeployment: Decodable {
     let deploymentId: String?
     let hostnames: [String]
 
+    private enum CodingKeys: String, CodingKey {
+        case deploymentId
+        case hostnames
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         deploymentId = try container.decodeIfPresent(String.self, forKey: .deploymentId)
